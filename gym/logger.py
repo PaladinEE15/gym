@@ -1,6 +1,6 @@
 import warnings
 
-from gymn.utils import colorize
+from gym.utils import colorize
 
 DEBUG = 10
 INFO = 20

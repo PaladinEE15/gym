@@ -3,13 +3,13 @@ import os
 import sys
 import warnings
 
-from gymn import error
-from gymn.version import VERSION as __version__
+from gym import error
+from gym.version import VERSION as __version__
 
-from gymn.core import Env, GoalEnv, Wrapper, ObservationWrapper, ActionWrapper, RewardWrapper
-from gymn.spaces import Space
-from gymn.envs import make, spec, register
-from gymn import logger
-from gymn import vector
+from gym.core import Env, GoalEnv, Wrapper, ObservationWrapper, ActionWrapper, RewardWrapper
+from gym.spaces import Space
+from gym.envs import make, spec, register
+from gym import logger
+from gym import vector
 
 __all__ = ["Env", "Space", "Wrapper", "make", "spec", "register"]

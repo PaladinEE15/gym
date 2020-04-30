@@ -1,6 +1,6 @@
-import gymn
-from gymn import error
-from gymn.utils import closer
+import gym
+from gym import error
+from gym.utils import closer
 
 env_closer = closer.Closer()
 
@@ -164,7 +164,7 @@ class GoalEnv(Env):
 
     def reset(self):
         # Enforce that each GoalEnv uses a Goal-compatible observation space.
-        if not isinstance(self.observation_space, gymn.spaces.Dict):
+        if not isinstance(self.observation_space, gym.spaces.Dict):
             raise error.Error('GoalEnv requires an observation space of type gym.spaces.Dict')
         for key in ['observation', 'achieved_goal', 'desired_goal']:
             if key not in self.observation_space.spaces:
