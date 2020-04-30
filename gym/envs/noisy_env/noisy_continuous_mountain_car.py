@@ -38,6 +38,8 @@ class NoisyContinuous_MountainCarEnv(gym.Env):
         self.goal_position = 0.45 # was 0.5 in gym, 0.45 in Arnaud de Broissia's version
         self.goal_velocity = goal_velocity
         self.power = 0.0015
+        self.action_noise=0
+        self.observe_noise=0
 
         self.low_state = np.array(
             [self.min_position, -self.max_speed], dtype=np.float32
@@ -49,19 +51,23 @@ class NoisyContinuous_MountainCarEnv(gym.Env):
         self.viewer = None
 
         self.action_space = spaces.Box(
-            low=self.min_action,
+            low=self.min_action,#seems to be the boundary
             high=self.max_action,
             shape=(1,),
             dtype=np.float32
         )
         self.observation_space = spaces.Box(
-            low=self.low_state,
+            low=self.low_state,#seems to be the boundary
             high=self.high_state,
             dtype=np.float32
         )
 
         self.seed()
         self.reset()
+
+    def adjust_noise(ac_noise,obs_noise):
+        self.action_noise=ac_noise
+        self.observe_noise=obs_noise
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -71,7 +77,7 @@ class NoisyContinuous_MountainCarEnv(gym.Env):
 
         position = self.state[0]
         velocity = self.state[1]
-        force = min(max(action[0], self.min_action), self.max_action)
+        force = min(max(action[0]+self.action_noise, self.min_action), self.max_action)
 
         velocity += force * self.power - 0.0025 * math.cos(3 * position)
         if (velocity > self.max_speed): velocity = self.max_speed
@@ -89,10 +95,11 @@ class NoisyContinuous_MountainCarEnv(gym.Env):
         reward = 0
         if done:
             reward = 100.0
-        reward -= math.pow(action[0], 2) * 0.1
+        reward -= math.pow(action[0]+self.action_noise, 2) * 0.1
 
         self.state = np.array([position, velocity])
-        return self.state, reward, done, {}
+        noisy_state = np.array([position, velocity+self.action_noise])
+        return noisy_state, reward, done, {}
 
     def reset(self):
         self.state = np.array([self.np_random.uniform(low=-0.6, high=-0.4), 0])
