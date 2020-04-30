@@ -92,6 +92,12 @@ register(
 )
 
 register(
+    id='NoisyPendulum-v0',
+    entry_point='gym.envs.noisy_env:NoisyPendulumEnv',
+    max_episode_steps=200,
+)
+
+register(
     id='Acrobot-v1',
     entry_point='gym.envs.classic_control:AcrobotEnv',
     reward_threshold=-100.0,

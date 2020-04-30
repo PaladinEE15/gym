@@ -65,7 +65,7 @@ class NoisyContinuous_MountainCarEnv(gym.Env):
         self.seed()
         self.reset()
 
-    def adjust_noise(self, ac_noise,obs_noise):
+    def set_noise(self, ac_noise,obs_noise):
         self.action_noise=ac_noise
         self.observe_noise=obs_noise
 
@@ -103,7 +103,8 @@ class NoisyContinuous_MountainCarEnv(gym.Env):
 
     def reset(self):
         self.state = np.array([self.np_random.uniform(low=-0.6, high=-0.4), 0])
-        return np.array(self.state)
+        noisy_state = np.array([self.state[0],self.state[1]+self.action_noise])
+        return noisy_state
 
     def _height(self, xs):
         return np.sin(3 * xs)*.45+.55
