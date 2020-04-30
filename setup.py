@@ -17,22 +17,21 @@ extras = {
 # Meta dependency groups.
 extras['all'] = [item for group in extras.values() for item in group]
 
-setup(name='gym',
+setup(name='gymn',
       version=VERSION,
-      description='The OpenAI Gym: A toolkit for developing and comparing your reinforcement learning agents.',
-      url='https://github.com/openai/gym',
-      author='OpenAI',
-      author_email='gym@openai.com',
+      description='modified gym environment based on OpenAI gym',
+      author='ylb',
+      author_email='paladinee15@qq.com',
       license='',
       packages=[package for package in find_packages()
-                if package.startswith('gym')],
+                if package.startswith('gymn')],
       zip_safe=False,
       install_requires=[
           'scipy', 'numpy>=1.10.4', 'pyglet>=1.4.0,<=1.5.0', 'cloudpickle>=1.2.0,<1.4.0',
           'enum34~=1.1.6;python_version<"3.4"',
       ],
       extras_require=extras,
-      package_data={'gym': [
+      package_data={'gymn': [
         'envs/mujoco/assets/*.xml',
         'envs/classic_control/assets/*.png',
         'envs/robotics/assets/LICENSE.md',
