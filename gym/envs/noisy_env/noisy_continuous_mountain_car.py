@@ -65,7 +65,7 @@ class NoisyContinuous_MountainCarEnv(gym.Env):
         self.seed()
         self.reset()
 
-    def adjust_noise(ac_noise,obs_noise):
+    def adjust_noise(self, ac_noise,obs_noise):
         self.action_noise=ac_noise
         self.observe_noise=obs_noise
 
