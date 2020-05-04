@@ -98,12 +98,12 @@ class NoisyContinuous_MountainCarEnv(gym.Env):
         reward -= math.pow(action[0]+self.action_noise, 2) * 0.1
 
         self.state = np.array([position, velocity])
-        noisy_state = np.array([position, velocity+self.action_noise])
+        noisy_state = np.array([position, velocity+self.observe_noise])
         return noisy_state, reward, done, {}
 
     def reset(self):
         self.state = np.array([self.np_random.uniform(low=-0.6, high=-0.4), 0])
-        noisy_state = np.array([self.state[0],self.state[1]+self.action_noise])
+        noisy_state = np.array([self.state[0],self.state[1]+self.observe_noise])
         return noisy_state
 
     def _height(self, xs):

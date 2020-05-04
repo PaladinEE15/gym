@@ -36,15 +36,15 @@ import numpy as np
 from stable_baselines.sac.policies import MlpPolicy
 from stable_baselines import SAC
 
-env = gym.make('Pendulum-v0')
+env = gym.make('NoisyPendulum-v0')
 
 model = SAC(MlpPolicy, env, verbose=1)
-model.learn(total_timesteps=50000, log_interval=10)
-model.save("sac_pendulum")
+model.learn(total_timesteps=20000, log_interval=10)
+model.save("sac_noisypendulum")
 
 del model # remove to demonstrate saving and loading
 
-model = SAC.load("sac_pendulum")
+model = SAC.load("sac_noisypendulum")
 
 obs = env.reset()
 while True:
