@@ -69,6 +69,9 @@ class NoisyPendulumEnv(gym.Env):
         self.last_u = None
         return self._get_obs()
 
+    def get_noise(self):
+        return self.observe_noise, self.action_noise
+
     def _get_obs(self):
         theta, thetadot = self.state
         theta = theta+self.observe_noise
