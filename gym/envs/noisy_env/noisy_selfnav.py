@@ -126,6 +126,40 @@ class NoisySelfnav(gym.Env):
 
         return self.state, total_reward , isdone, {}
 
+    
+    def render(self, mode='human'):
+        if self.viewer is None:
+            from gym.envs.classic_control import rendering
+            self.viewer = rendering.Viewer(1200,600)
+            obs_a_loc = [[10,0],[10,40],[50,0],[50,40]]
+            obs_b_loc = [[70,20],[70,60],[110,20],[110,60]]
+            self.obs_a = rendering.make_polygon(obs_a_loc)
+            self.obs_b = rendering.make_polygon(obs_b_loc)
+            self.viewer.add_geom(self.obs_a)
+            self.viewer.add_geom(self.obs_b)
+
+            car = rendering.make_circle(2)
+            car.add_attr(rendering.Transform(translation=(0, clearance)))
+            self.cartrans = rendering.Transform()
+            car.add_attr(self.cartrans)
+            self.viewer.add_geom(car)
+        
+        pos_x = self.state[10]*30 + 60
+        pos_y = self.state[11]*30 + 30
+        self.cartrans.set_translation(pos_x,pos_y)
+        return self.viewer.render(return_rgb_array=mode == 'rgb_array')
+
+
+
+
+
+
+    def close(self):
+        if self.viewer:
+            self.viewer.close()
+            self.viewer = None
+
+
 
 
 def angle_norm(x):
