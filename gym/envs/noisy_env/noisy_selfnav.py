@@ -3,9 +3,10 @@ from gym import spaces
 from gym.utils import seeding
 import numpy as np
 from os import path
+import math
 
 
-class NoisySelfnav(gym.Env):
+class NoisySelfnavEnv(gym.Env):
     metadata = {
         'render.modes': ['human', 'rgb_array'],
         'video.frames_per_second': 30
@@ -35,36 +36,96 @@ class NoisySelfnav(gym.Env):
 
         self.low_state=np.array([self.min_detec_dis,self.min_detec_dis,self.min_detec_dis,\
         self.min_detec_dis,self.min_detec_dis,self.min_detec_dis,self.min_detec_dis,\
-        self.min_direction,self.min_targ_dis,self.min_direction,self.min_x=0,\
+        self.min_direction,self.min_targ_dis,self.min_direction,self.min_x,\
         self.min_y],dtype=np.float32)
 
         self.high_state=np.array([self.max_detec_dis,self.max_detec_dis,self.max_detec_dis,\
         self.max_detec_dis,self.max_detec_dis,self.max_detec_dis,self.max_detec_dis,\
-        self.max_direction,self.max_targ_dis,self.max_direction,self.max_x=0,\
+        self.max_direction,self.max_targ_dis,self.max_direction,self.max_x,\
         self.max_y],dtype=np.float32)
+
+        self.viewer = None
 
         self.action_space = spaces.Box(
             low=self.min_action,
             high=self.max_action,
+            shape=(1,),
             dtype=np.float32
         )
 
         self.observation_space = spaces.Box(
-            low=self.low_state
-            high=self.high_state
+            low=self.low_state,
+            high=self.high_state,
             dtype=np.float32
         )
+
+        #initialize a set of hyper-parameters
+        #spawn locations
+        self.easy_high = 60
+        self.easy_low = 50
+        self.hard_high = 40
+        self.hard_low = 30
+        #obstacle size
+        self.obs_height = 40
+        #reward parameters
+        self.trans_r = 2
+        self.obs_p1 = 8
+        self.obs_p2 = 5
+        self.step_p = -0.6
+        self.suc_r = 100
+        self.fail_p = -50
 
         self.seed()
         self.reset()
 
-    def reset(self):
-        self.start_loc = np.array([0,self.np_random.uniform(low=0,high=30)])
-        self.target_loc = np.array([120,self.np_random.uniform(low=30,high=60)])
+    def set_start_loc (self, easy_high, easy_low, hard_high, hard_low):
+        self.easy_high = easy_high
+        self.easy_low = easy_low
+        self.hard_high = hard_high
+        self.hard_low = hard_low
+    
+    def set_reward_para (self, trans_r, obs_p1, obs_p2, step_p, suc_r, fail_p):
+        self.trans_r = trans_r
+        self.obs_p1 = obs_p1
+        self.obs_p2 = obs_p2
+        self.step_p = step_p
+        self.suc_r = suc_r
+        self.fail_p = fail_p  
+    
+    def set_barrier_height(self, obs_height):
+        self.obs_height = obs_height
+
+    def getdistance(self,x,y,direc):
+        delta_x=0.1*np.cos(direc)
+        delta_y=0.1*np.sin(direc)
+        #recover normal axis
+        cur_x = x
+        cur_y = y
+        for ccount in range(200):
+            cur_x=cur_x+delta_x
+            cur_y=cur_y+delta_y
+            if cur_y>=60 and cur_y<=0:
+                return ccount*0.01-1
+            if cur_y<=self.obs_height:
+                if cur_x>=10 and cur_x<=50:
+                    return ccount*0.01-1
+            if cur_y>=60-self.obs_height:
+                if cur_x>=70 and cur_x<=110:
+                    return ccount*0.01-1
+        return 1
+
+    def reset(self,mode=0):
+        #mode=0,easy; mode=1, hard
+        if mode == 0:
+            self.start_loc = np.array([0,self.np_random.uniform(low=self.easy_low,high=self.easy_high)])
+            self.target_loc = np.array([120,self.np_random.uniform(low=60-self.easy_high,high=60-self.easy_low)])
+        else :
+            self.start_loc = np.array([0,self.np_random.uniform(low=self.hard_low,high=self.hard_high)])
+            self.target_loc = np.array([120,self.np_random.uniform(low=60-self.hard_high,high=60-self.hard_low)])
         self.cur_x_real = self.start_loc[0]
         self.cur_y_real = self.start_loc[1]
         self.speed = 2
-        self.speed_direc = 0.5
+        self.speed_direc = 0
         self.x_dist = self.target_loc[0]-self.start_loc[0]
         self.y_dist = self.target_loc[1]-self.start_loc[1]
         self.real_dist = math.sqrt(self.x_dist**2+self.y_dist**2)
@@ -82,10 +143,15 @@ class NoisySelfnav(gym.Env):
         return [seed]
 
     def step(self, action):
+        #check action range
+        if action > self.max_action :
+            action = self.max_action
+        if action < self.min_action :
+            action = self.min_action
         #perform move first
         self.speed_direc=angle_norm(self.state[7]+action)
-        self.cur_x_real=self.state[10]*30+60+self.speed*math.cos(self.speed_direc)
-        self.cur_y_real=self.state[11]*30+30+self.speed*math.sin(self.speed_direc)
+        self.cur_x_real=self.state[10]*30+60+self.speed*math.cos(math.pi*self.speed_direc)
+        self.cur_y_real=self.state[11]*30+30+self.speed*math.sin(math.pi*self.speed_direc)
         #get observations
         self.x_dist=self.target_loc[0]-self.cur_x_real
         self.y_dist=self.target_loc[1]-self.cur_y_real
@@ -96,7 +162,7 @@ class NoisySelfnav(gym.Env):
         kk=0
         for bias in self.detect_direc:
             direc = angle_norm(self.speed_direc+bias)
-            self.state[kk] = getdistance(self.cur_x_real,self.cur_y_real,direc)
+            self.state[kk] = self.getdistance(self.cur_x_real,self.cur_y_real,direc)
             kk = kk+1
         #renew other states
         self.state[7] = self.speed_direc
@@ -106,22 +172,28 @@ class NoisySelfnav(gym.Env):
         self.state[11] = (self.cur_y_real-30)/30
         #judge whether done
         if self.real_dist < 10 :
-            isdone = True
+            isarrival = True
         else :
-            isdone = False
+            isarrival = False
         #calculate reward
         #obstacle penalty
         min_dis = 10*np.min(self.state[0:7])+10
-        obs_pny = -8*np.exp(-25*min_dis)
+        if min_dis > 0 :
+            obs_pny = -self.obs_p1*np.exp(-self.obs_p2*min_dis)
+            iscrash = False
+        else :
+            obs_pny = self.fail_p
+            iscrash = True
         #step penalty
-        sep_pny = -0.6
+        sep_pny = self.step_p
         #transition reward
-        trans_reward = 2*(self.old_dist-self.real_dist)
+        trans_reward = self.trans_r*(self.old_dist-self.real_dist)
         #success reward
-        if isdone:
-            success_reward = 100
+        if isarrival:
+            success_reward = self.suc_r
         else:
             success_reward = 0
+        isdone = isarrival or iscrash
         total_reward = obs_pny+sep_pny+trans_reward+success_reward
 
         return self.state, total_reward , isdone, {}
@@ -139,7 +211,7 @@ class NoisySelfnav(gym.Env):
             self.viewer.add_geom(self.obs_b)
 
             car = rendering.make_circle(2)
-            car.add_attr(rendering.Transform(translation=(0, clearance)))
+            car.add_attr(rendering.Transform())
             self.cartrans = rendering.Transform()
             car.add_attr(self.cartrans)
             self.viewer.add_geom(car)
@@ -148,10 +220,6 @@ class NoisySelfnav(gym.Env):
         pos_y = self.state[11]*30 + 30
         self.cartrans.set_translation(pos_x,pos_y)
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
-
-
-
-
 
 
     def close(self):
@@ -169,22 +237,5 @@ def angle_norm(x):
         x=x+2
     return x
 
-def getdistance(x,y,direc):
-    delta_x=0.1*np.cos(direc)
-    delta_y=0.1*np.sin(direc)
-    #recover normal axis
-    cur_x = x
-    cur_y = y
-    for ccount in range(200):
-        cur_x=cur_x+delta_x
-        cur_y=cur_y+delta_y
-        if cur_y>=60 and cur_y<=0:
-            return ccount*0.01-1
-        if cur_y<40:
-            if cur_x>10 and cur_x<50:
-                return ccount*0.01-1
-        if cur_y>20:
-            if cur_x>70 and cur_x<110:
-                return ccount*0.01-1
-    return 1
+
             
