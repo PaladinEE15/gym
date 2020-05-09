@@ -65,6 +65,8 @@ class NoisySelfnavEnv(gym.Env):
         self.easy_low = 50
         self.hard_high = 40
         self.hard_low = 30
+        self.start_x = 0
+        self.target_x = 120
         #obstacle size
         self.obs_height = 40
         #reward parameters
@@ -83,6 +85,10 @@ class NoisySelfnavEnv(gym.Env):
         self.easy_low = easy_low
         self.hard_high = hard_high
         self.hard_low = hard_low
+
+    def set_x (self, start_x, target_x):
+        self.start_x = start_x
+        self.target_x = target_x
     
     def set_reward_para (self, trans_r, obs_p1, obs_p2, step_p, suc_r, fail_p):
         self.trans_r = trans_r
@@ -117,11 +123,11 @@ class NoisySelfnavEnv(gym.Env):
     def reset(self,mode=0):
         #mode=0,easy; mode=1, hard
         if mode == 0:
-            self.start_loc = np.array([0,self.np_random.uniform(low=self.easy_low,high=self.easy_high)])
-            self.target_loc = np.array([120,self.np_random.uniform(low=60-self.easy_high,high=60-self.easy_low)])
+            self.start_loc = np.array([self.start_x,self.np_random.uniform(low=self.easy_low,high=self.easy_high)])
+            self.target_loc = np.array([self.target_x,self.np_random.uniform(low=60-self.easy_high,high=60-self.easy_low)])
         else :
-            self.start_loc = np.array([0,self.np_random.uniform(low=self.hard_low,high=self.hard_high)])
-            self.target_loc = np.array([120,self.np_random.uniform(low=60-self.hard_high,high=60-self.hard_low)])
+            self.start_loc = np.array([self.start_x,self.np_random.uniform(low=self.hard_low,high=self.hard_high)])
+            self.target_loc = np.array([self.target_x,self.np_random.uniform(low=60-self.hard_high,high=60-self.hard_low)])
         self.cur_x_real = self.start_loc[0]
         self.cur_y_real = self.start_loc[1]
         self.speed = 2
@@ -134,6 +140,8 @@ class NoisySelfnavEnv(gym.Env):
         normed_xstart = (self.start_loc[0]-60)/30
         normed_ystart = (self.start_loc[1]-30)/30
         self.target_direc = math.atan(self.y_dist/self.x_dist)/math.pi
+        if self.x_dist < 0 :
+            self.target_direc = -self.target_direc
         self.state = np.array([1,1,1,1,1,1,1,self.speed_direc,normed_dist,self.target_direc,normed_xstart,normed_ystart])
         self.detect_direc = [1/2,1/3,1/6,0,-1/6,-1/3,-1/2]
         return self.state
@@ -156,6 +164,8 @@ class NoisySelfnavEnv(gym.Env):
         self.x_dist=self.target_loc[0]-self.cur_x_real
         self.y_dist=self.target_loc[1]-self.cur_y_real
         self.target_direc=math.atan(self.y_dist/self.x_dist)/math.pi
+        if self.x_dist < 0 :
+            self.target_direc = -self.target_direc
         self.old_dist = self.real_dist
         self.real_dist = math.sqrt(self.x_dist**2+self.y_dist**2)
         #detect obstacles. this can be parallized later
