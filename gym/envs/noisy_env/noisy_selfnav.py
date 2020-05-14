@@ -21,28 +21,22 @@ class NoisySelfnavEnv(gym.Env):
 
     def __init__(self):
         self.max_detec_dis=1
-        self.min_detec_dis=-1
+        self.min_detec_dis=0
         self.max_direction=1
         self.min_direction=-1
-        self.max_x=2
-        self.min_x=-2
-        self.max_y=1
-        self.min_y=-1
         self.max_targ_dis=1
-        self.min_targ_dis=-1
+        self.min_targ_dis=0
 
         self.max_action=0.5 #can only turn 90
         self.min_action=-0.5
 
         self.low_state=np.array([self.min_detec_dis,self.min_detec_dis,self.min_detec_dis,\
         self.min_detec_dis,self.min_detec_dis,self.min_detec_dis,self.min_detec_dis,\
-        self.min_direction,self.min_targ_dis,self.min_direction,self.min_x,\
-        self.min_y],dtype=np.float32)
+        self.min_direction,self.min_targ_dis,self.min_direction],dtype=np.float32)
 
         self.high_state=np.array([self.max_detec_dis,self.max_detec_dis,self.max_detec_dis,\
         self.max_detec_dis,self.max_detec_dis,self.max_detec_dis,self.max_detec_dis,\
-        self.max_direction,self.max_targ_dis,self.max_direction,self.max_x,\
-        self.max_y],dtype=np.float32)
+        self.max_direction,self.max_targ_dis,self.max_direction],dtype=np.float32)
 
         self.viewer = None
 
@@ -75,7 +69,7 @@ class NoisySelfnavEnv(gym.Env):
         self.obs_p2 = 5
         self.step_p = -0.6
         self.suc_r = 100
-        self.fail_p = -50
+        self.fail_p = 0
 
         self.seed()
         self.reset()
@@ -102,8 +96,8 @@ class NoisySelfnavEnv(gym.Env):
         self.obs_height = obs_height
 
     def getdistance(self,x,y,direc):
-        delta_x=0.1*np.cos(direc)
-        delta_y=0.1*np.sin(direc)
+        delta_x=0.1*np.cos(direc*math.pi)
+        delta_y=0.1*np.sin(direc*math.pi)
         #recover normal axis
         cur_x = x
         cur_y = y
@@ -111,13 +105,13 @@ class NoisySelfnavEnv(gym.Env):
             cur_x=cur_x+delta_x
             cur_y=cur_y+delta_y
             if cur_y>=60 and cur_y<=0:
-                return ccount*0.01-1
+                return ccount*0.005
             if cur_y<=self.obs_height:
                 if cur_x>=10 and cur_x<=50:
-                    return ccount*0.01-1
+                    return ccount*0.005
             if cur_y>=60-self.obs_height:
                 if cur_x>=70 and cur_x<=110:
-                    return ccount*0.01-1
+                    return ccount*0.005
         return 1
 
     def reset(self,mode=0):
@@ -136,13 +130,11 @@ class NoisySelfnavEnv(gym.Env):
         self.y_dist = self.target_loc[1]-self.start_loc[1]
         self.real_dist = math.sqrt(self.x_dist**2+self.y_dist**2)
         self.old_dist = self.real_dist 
-        normed_dist = (self.real_dist-100)/100
-        normed_xstart = (self.start_loc[0]-60)/30
-        normed_ystart = (self.start_loc[1]-30)/30
+        normed_dist = 2/(np.exp(-0.002*self.real_dist) + 1)-1
         self.target_direc = math.atan(self.y_dist/self.x_dist)/math.pi
         if self.x_dist < 0 :
             self.target_direc = -self.target_direc
-        self.state = np.array([1,1,1,1,1,1,1,self.speed_direc,normed_dist,self.target_direc,normed_xstart,normed_ystart])
+        self.state = np.array([1,1,1,1,1,1,1,self.speed_direc,normed_dist,self.target_direc])
         self.detect_direc = [1/2,1/3,1/6,0,-1/6,-1/3,-1/2]
         return self.state
 
@@ -158,8 +150,8 @@ class NoisySelfnavEnv(gym.Env):
             action = self.min_action
         #perform move first
         self.speed_direc=angle_norm(self.state[7]+action)
-        self.cur_x_real=self.state[10]*30+60+self.speed*math.cos(math.pi*self.speed_direc)
-        self.cur_y_real=self.state[11]*30+30+self.speed*math.sin(math.pi*self.speed_direc)
+        self.cur_x_real=self.cur_x_real+self.speed*math.cos(math.pi*self.speed_direc)
+        self.cur_y_real=self.cur_y_real+self.speed*math.sin(math.pi*self.speed_direc)
         #get observations
         self.x_dist=self.target_loc[0]-self.cur_x_real
         self.y_dist=self.target_loc[1]-self.cur_y_real
@@ -176,10 +168,8 @@ class NoisySelfnavEnv(gym.Env):
             kk = kk+1
         #renew other states
         self.state[7] = self.speed_direc
-        self.state[8] = (self.real_dist-100)/100
+        self.state[8] = 2/(np.exp(-0.002*self.real_dist) + 1)-1
         self.state[9] = self.target_direc
-        self.state[10] = (self.cur_x_real-60)/30
-        self.state[11] = (self.cur_y_real-30)/30
         #judge whether done
         if self.real_dist < 10 :
             isarrival = True
@@ -187,7 +177,7 @@ class NoisySelfnavEnv(gym.Env):
             isarrival = False
         #calculate reward
         #obstacle penalty
-        min_dis = 10*np.min(self.state[0:7])+10
+        min_dis = 20*np.min(self.state[0:7])
         if min_dis > 0 :
             obs_pny = -self.obs_p1*np.exp(-self.obs_p2*min_dis)
             iscrash = False
@@ -226,8 +216,8 @@ class NoisySelfnavEnv(gym.Env):
             car.add_attr(self.cartrans)
             self.viewer.add_geom(car)
         
-        pos_x = self.state[10]*30 + 60
-        pos_y = self.state[11]*30 + 30
+        pos_x = self.cur_x_real
+        pos_y = self.cur_y_real
         self.cartrans.set_translation(pos_x,pos_y)
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
