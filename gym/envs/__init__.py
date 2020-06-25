@@ -86,6 +86,12 @@ register(
 )
 
 register(
+    id='NoisySelfNav-v0',
+    entry_point='gym.envs.noisy_env:NoisySelfnavEnv',
+    max_episode_steps=999,
+)
+
+register(
     id='Pendulum-v0',
     entry_point='gym.envs.classic_control:PendulumEnv',
     max_episode_steps=200,
