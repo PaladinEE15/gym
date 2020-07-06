@@ -14,7 +14,8 @@ class NoisyPendulumEnv(gym.Env):
     def __init__(self, g=10.0):
         self.max_speed = 8
         self.action_noise = 0 
-        self.observe_noise = 0
+        self.observe_noise_theta = 0
+        self.observe_noise_dot = 0
         self.max_torque = 2.
         self.dt = .05
         self.g = g
@@ -36,9 +37,16 @@ class NoisyPendulumEnv(gym.Env):
 
         self.seed()
 
-    def set_noise(self, ac_noise,obs_noise):
+    def set_noise(self, ac_noise,obs_noise_theta,obs_noise_dot):
         self.action_noise = ac_noise
-        self.observe_noise = obs_noise
+        self.observe_noise_theta = obs_noise_theta
+        self.observe_noise_dot = obs_noise_dot
+
+    def change_env_setting(self, g, m ,l):
+        self.g = g
+        self.m = m 
+        self.l = l
+        
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -70,11 +78,12 @@ class NoisyPendulumEnv(gym.Env):
         return self._get_obs()
 
     def get_noise(self):
-        return self.observe_noise, self.action_noise
+        return self.observe_noise_theta, self.observe_noise_dot, self.action_noise
 
     def _get_obs(self):
         theta, thetadot = self.state
-        theta = theta+self.observe_noise
+        theta = theta + self.observe_noise_theta
+        thetadot = thetadot + self.observe_noise_dot
         return np.array([np.cos(theta), np.sin(theta), thetadot])
 
     def render(self, mode='human'):
