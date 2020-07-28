@@ -46,7 +46,10 @@ class NoisyPendulumEnv(gym.Env):
         self.g = g
         self.m = m 
         self.l = l
-        
+
+    def get_env_params(self):
+        return self.g, self.m, self.l
+
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
