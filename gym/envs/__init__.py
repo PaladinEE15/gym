@@ -92,6 +92,24 @@ register(
 )
 
 register(
+    id='NoisyCartpole-v0',
+    entry_point='gym.envs.noisy_env:NoisyCartPoleEnv',
+    max_episode_steps=10000,
+)
+
+register(
+    id='DiscreteCartpole-v0',
+    entry_point='gym.envs.noisy_env:DiscreteCartPoleEnv',
+    max_episode_steps=200,
+)
+
+register(
+    id='NoisyAcrobot-v0',
+    entry_point='gym.envs.noisy_env:NoisyAcrobotEnv',
+    max_episode_steps=500,
+)
+
+register(
     id='Pendulum-v0',
     entry_point='gym.envs.classic_control:PendulumEnv',
     max_episode_steps=200,

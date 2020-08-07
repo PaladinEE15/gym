@@ -66,6 +66,10 @@ class NoisyContinuous_MountainCarEnv(gym.Env):
         self.seed()
         self.reset()
 
+
+    def get_env_params(self):
+        return self.power
+
     def change_env(self, thepower):
         self.power = thepower
 
