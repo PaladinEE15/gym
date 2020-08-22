@@ -107,6 +107,14 @@ class MujocoEnv(gym.Env):
         ob = self.reset_model()
         return ob
 
+    def try_step(self, action):
+        qposraw = copy.deepcopy(self.sim.data.qpos)
+        qvelraw = copy.deepcopy(self.sim.data.qvel)
+        self.do_simulation(action, self.frame_skip)
+        obs = self._get_obs()
+        self.set_state(qposraw,qvelraw)
+        return obs
+
     def set_state(self, qpos, qvel):
         assert qpos.shape == (self.model.nq,) and qvel.shape == (self.model.nv,)
         old_state = self.sim.get_state()

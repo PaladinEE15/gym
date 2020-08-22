@@ -55,6 +55,24 @@ class NoisyPendulumEnv(gym.Env):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
+    def try_step(self, u):
+        th, thdot = self.state  # th := theta
+
+        g = self.g
+        m = self.m
+        l = self.l
+        dt = self.dt
+        u = u+self.action_noise
+        u = np.clip(u, -self.max_torque, self.max_torque)[0]
+        self.last_u = u  # for rendering
+        costs = angle_normalize(th) ** 2 + .1 * thdot ** 2 + .001 * (u ** 2)
+
+        newthdot = thdot + (-3 * g / (2 * l) * np.sin(th + np.pi) + 3. / (m * l ** 2) * u) * dt
+        newth = th + newthdot * dt
+        newthdot = np.clip(newthdot, -self.max_speed, self.max_speed)  
+
+        return np.array([newth, newthdot])      
+
     def step(self, u):
         th, thdot = self.state  # th := theta
 
