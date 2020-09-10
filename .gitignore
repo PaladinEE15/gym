@@ -37,3 +37,17 @@ tutorial/*.html
 # PyCharm project files
 .idea
 vizdoom.ini
+halfche_noise_scale.npy
+halfche_noise_var.npy
+hct_denoise_1.h5
+hct_denoise_2.h5
+hct_x.npy
+*.npy
+*.zip
+*.ipynb
+test_correct_mountain.ipynb
+test_correct_pendulum.ipynb
+testclassic.ipynb
+gym/envs/mujoco/assets/half_cheetah - 副本.xml
+gym/envs/mujoco/assets/hopper - 副本.xml
+gym/envs/mujoco/half_cheetah_v3 - 副本.py

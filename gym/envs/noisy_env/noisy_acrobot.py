@@ -151,15 +151,17 @@ class NoisyAcrobotEnv(core.Env):
 
     def step(self, a):
         s = self.state
+        '''
         a1 = np.exp(-abs(a+1))
         a2 = np.exp(-abs(a))
         a3 = np.exp(-abs(a-1))
         th1 = a1/(a1+a2+a3)
         th2 = (a1+a2)/(a1+a2+a3)
+        '''
         thres = np.random.rand(1)
-        if thres<th1:
+        if thres<-0.33:
             torque = -1.0
-        elif thres<th2:
+        elif thres<0.33:
             torque = 0.0
         else:
             torque = 1.0
