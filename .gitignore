@@ -37,3 +37,14 @@ tutorial/*.html
 # PyCharm project files
 .idea
 vizdoom.ini
+halfche_noise_scale.npy
+halfche_noise_var.npy
+hct_denoise_1.h5
+hct_denoise_2.h5
+hct_x.npy
+*.npy
+*.zip
+*.ipynb
+test_correct_mountain.ipynb
+test_correct_pendulum.ipynb
+testclassic.ipynb

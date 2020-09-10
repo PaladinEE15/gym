@@ -7,6 +7,7 @@ from gym.utils import seeding
 import numpy as np
 from os import path
 import gym
+import copy
 
 try:
     import mujoco_py
