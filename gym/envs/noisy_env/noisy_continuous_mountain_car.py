@@ -15,7 +15,7 @@ permalink: https://perma.cc/6Z2N-PFWC
 """
 
 import math
-
+import copy
 import numpy as np
 
 import gym
@@ -38,9 +38,6 @@ class NoisyContinuous_MountainCarEnv(gym.Env):
         self.goal_position = 0.45 # was 0.5 in gym, 0.45 in Arnaud de Broissia's version
         self.goal_velocity = goal_velocity
         self.power = 0.0015
-        self.action_noise = 0
-        self.pos_noise = 0
-        self.velo_noise = 0
 
         self.low_state = np.array(
             [self.min_position, -self.max_speed], dtype=np.float32
@@ -66,17 +63,31 @@ class NoisyContinuous_MountainCarEnv(gym.Env):
         self.seed()
         self.reset()
 
+    def try_step(self, action):
+        position = copy.deepcopy(self.state[0])
+        velocity = copy.deepcopy(self.state[1])
+        force = min(max(action[0], self.min_action), self.max_action)
+
+        velocity += force * self.power - 0.0025 * math.cos(3 * position)
+        if (velocity > self.max_speed): velocity = self.max_speed
+        if (velocity < -self.max_speed): velocity = -self.max_speed
+        position += velocity
+        if (position > self.max_position): position = self.max_position
+        if (position < self.min_position): position = self.min_position
+        if (position == self.min_position and velocity < 0): velocity = 0
+
+        # Convert a possible numpy bool to a Python bool.
+        done = bool(
+            position >= self.goal_position and velocity >= self.goal_velocity
+        )
+        noisy_state = np.array([position, velocity])
+        return noisy_state
 
     def get_env_params(self):
         return self.power
 
     def change_env(self, thepower):
         self.power = thepower
-
-    def set_noise(self, ac_noise,pos_noise,velo_noise):
-        self.action_noise = ac_noise
-        self.pos_noise = pos_noise
-        self.velo_noise = velo_noise
 
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
@@ -86,7 +97,7 @@ class NoisyContinuous_MountainCarEnv(gym.Env):
 
         position = self.state[0]
         velocity = self.state[1]
-        force = min(max(action[0]+self.action_noise, self.min_action), self.max_action)
+        force = min(max(action[0], self.min_action), self.max_action)
 
         velocity += force * self.power - 0.0025 * math.cos(3 * position)
         if (velocity > self.max_speed): velocity = self.max_speed
@@ -101,20 +112,20 @@ class NoisyContinuous_MountainCarEnv(gym.Env):
             position >= self.goal_position and velocity >= self.goal_velocity
         )
 
-        reward = 0
+        reward = -1
+        
         if done:
             reward = 100.0
-        reward -= math.pow(action[0]+self.action_noise, 2) * 0.1
+        
+        #reward -= math.pow(action[0], 2) * 0.1
 
         self.state = np.array([position, velocity])
-        noisy_state = np.array([position+self.pos_noise, velocity+self.velo_noise])
-        return noisy_state, reward, done, {}
+        return self.state, reward, done, {}
 
     def reset(self):
         aa = self.np_random.uniform(low=-0.6, high=-0.4)
         self.state = np.array([aa, 0])
-        noisy_state = np.array([aa+self.pos_noise,self.velo_noise])
-        return noisy_state
+        return self.state
 
     def _height(self, xs):
         return np.sin(3 * xs)*.45+.55

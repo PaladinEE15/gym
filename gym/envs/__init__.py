@@ -94,13 +94,15 @@ register(
 register(
     id='NoisyCartpole-v0',
     entry_point='gym.envs.noisy_env:NoisyCartPoleEnv',
-    max_episode_steps=10000,
+    max_episode_steps=500,
+    reward_threshold=475.0,
 )
 
 register(
     id='DiscreteCartpole-v0',
     entry_point='gym.envs.noisy_env:DiscreteCartPoleEnv',
-    max_episode_steps=200,
+    max_episode_steps=500,
+    reward_threshold=475.0,
 )
 
 register(
