@@ -48,3 +48,6 @@ hct_x.npy
 test_correct_mountain.ipynb
 test_correct_pendulum.ipynb
 testclassic.ipynb
+gym/envs/mujoco/assets/half_cheetah - 副本.xml
+gym/envs/mujoco/assets/hopper - 副本.xml
+gym/envs/mujoco/half_cheetah_v3 - 副本.py
